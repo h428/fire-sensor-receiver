@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ServerHandler extends ChannelInboundHandlerAdapter {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final Set<Integer> INTERESTED_NODE_IDS = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
+    private static final Set<Integer> INTERESTED_NODE_IDS = new HashSet<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
     private final DataCollector dataCollector;
 
     public ServerHandler(DataCollector dataCollector) {
@@ -60,18 +60,10 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
         if (INTERESTED_NODE_IDS.contains(sensorData.getNodeId())) {
             dataCollector.collect(sensorData);
-            log.info("放入传感器数据：{}", sensorData);
         }
 
-        // Create a CSV formatted line
         String csvLine = sensorData.toCsvLine();
-
-        // Write the CSV line to the file
-        try {
-            FileWriterManager.writeData(csvLine);
-        } catch (IOException e) {
-            log.error("Error writing data to file", e);
-        }
+        FileWriterManager.writeData(csvLine);
 
     }
 

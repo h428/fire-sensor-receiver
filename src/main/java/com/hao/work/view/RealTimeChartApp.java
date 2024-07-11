@@ -29,9 +29,11 @@ public class RealTimeChartApp extends Application {
 
     private static RealTimeChartApp instance;
     private final BlockingQueue<SensorData> dataQueue = new LinkedBlockingQueue<>();
+
     private final Map<Integer, Deque<XYChart.Data<Number, Number>>> temperatureDataMap = new HashMap<>();
     private final Map<Integer, Deque<XYChart.Data<Number, Number>>> co2DataMap = new HashMap<>();
     private final Map<Integer, Deque<XYChart.Data<Number, Number>>> smokeDataMap = new HashMap<>();
+
     private final Map<Integer, XYChart.Series<Number, Number>> temperatureSeriesMap = new HashMap<>();
     private final Map<Integer, XYChart.Series<Number, Number>> co2SeriesMap = new HashMap<>();
     private final Map<Integer, XYChart.Series<Number, Number>> smokeSeriesMap = new HashMap<>();
@@ -70,7 +72,6 @@ public class RealTimeChartApp extends Application {
     }
 
     private LineChart<Number, Number> createChart(String title) {
-//        NumberAxis xAxis = new NumberAxis(1, 10, 1); // 设置X轴范围为1到10
         NumberAxis xAxis = new NumberAxis(); // 设置X轴范围为1到10
         xAxis.setAutoRanging(true); // 启用自动缩放
         xAxis.setLabel("数据点");
@@ -82,15 +83,13 @@ public class RealTimeChartApp extends Application {
 
     private synchronized void updateChart(SensorData sensorData, LineChart<Number, Number> temperatureChart,
             LineChart<Number, Number> co2Chart, LineChart<Number, Number> smokeChart) {
-        updateData(sensorData, temperatureChart, sensorData.getTemperature(), temperatureSeriesMap, temperatureDataMap,
-                countMap(temperatureDataMap));
-        updateData(sensorData, co2Chart, sensorData.getCo2Concentration(), co2SeriesMap, co2DataMap,
-                countMap(co2DataMap));
-        updateData(sensorData, smokeChart, sensorData.getSmokeConcentration(), smokeSeriesMap, smokeDataMap,
-                countMap(smokeDataMap));
+        updateData(sensorData, temperatureChart, sensorData.getRealTemperature(), temperatureSeriesMap,
+                temperatureDataMap);
+        updateData(sensorData, co2Chart, sensorData.getCo2Concentration(), co2SeriesMap, co2DataMap);
+        updateData(sensorData, smokeChart, sensorData.getSmokeConcentration(), smokeSeriesMap, smokeDataMap);
     }
 
-    private int countMap(Map<Integer, Deque<XYChart.Data<Number, Number>>> map) {
+    private int countMaxDataDeque(Map<Integer, Deque<XYChart.Data<Number, Number>>> map) {
         int len = 0;
 
         for (Entry<Integer, Deque<Data<Number, Number>>> entry : map.entrySet()) {
@@ -101,80 +100,66 @@ public class RealTimeChartApp extends Application {
         return len;
     }
 
-//    private int countTemperature() {
-//        int len = 0;
-//
-//        for (Entry<Integer, Deque<Data<Number, Number>>> entry : temperatureDataMap.entrySet()) {
-//            if (entry.getValue().size() > len) {
-//                len = entry.getValue().size();
-//            }
-//        }
-//        return len;
-//    }
-//
-//    private int countCO2() {
-//        int len = 0;
-//
-//        for (Entry<Integer, Deque<Data<Number, Number>>> entry : co2DataMap.entrySet()) {
-//            if (entry.getValue().size() > len) {
-//                len = entry.getValue().size();
-//            }
-//        }
-//        return len;
-//    }
-//
-//    private int countSmoke() {
-//        int len = 0;
-//
-//        for (Entry<Integer, Deque<Data<Number, Number>>> entry : smokeDataMap.entrySet()) {
-//            if (entry.getValue().size() > len) {
-//                len = entry.getValue().size();
-//            }
-//        }
-//        return len;
-//    }
+    private int countMaxSeries(Map<Integer, XYChart.Series<Number, Number>> seriesMap) {
+        int len = 0;
 
-    private synchronized void updateData(SensorData sensorData, LineChart<Number, Number> chart, int value,
+        for (Entry<Integer, XYChart.Series<Number, Number>> entry : seriesMap.entrySet()) {
+            if (entry.getValue().getData().size() > len) {
+                len = entry.getValue().getData().size();
+            }
+        }
+        return len;
+    }
+
+    private String getNodeName(int nodeId) {
+        if (nodeId == 1) {
+            return "火左";
+        }
+        if (nodeId == 2) {
+            return "火右";
+        }
+        if (nodeId == 3) {
+            return "火远处";
+        }
+        if (nodeId == 4) {
+            return "火前";
+        }
+        if (nodeId == 5) {
+            return "火上 1";
+        }
+        if (nodeId == 6) {
+            return "火上 2";
+        }
+        if (nodeId == 7) {
+            return "浓烟区";
+        }
+        if (nodeId == 8) {
+            return "安全通道";
+        }
+        return "Node " + nodeId;
+    }
+
+    private synchronized void updateData(SensorData sensorData, LineChart<Number, Number> chart, Number value,
             Map<Integer, XYChart.Series<Number, Number>> seriesMap,
-            Map<Integer, Deque<XYChart.Data<Number, Number>>> dataMap, int dataCount) {
+            Map<Integer, Deque<XYChart.Data<Number, Number>>> dataMap) {
+
         XYChart.Series<Number, Number> series = seriesMap.computeIfAbsent(sensorData.getNodeId(), k -> {
             XYChart.Series<Number, Number> newSeries = new XYChart.Series<>();
-            newSeries.setName("Node " + k);
+            String name = getNodeName(k);
+            newSeries.setName(name);
             chart.getData().add(newSeries);
             return newSeries;
         });
 
         Deque<XYChart.Data<Number, Number>> dataDeque = dataMap.computeIfAbsent(sensorData.getNodeId(),
                 k -> new LinkedList<>());
-//        if (dataDeque.size() >= 1000) {
-//            dataDeque.pollFirst(); // 移除最老的数据点
-//        }
-
-//        while ((dataDeque.size() + 1) < dataCount) {
-//            int x = dataDeque.peekLast().getXValue().intValue();
-//            dataDeque.addLast(new XYChart.Data<>(x, value));
-//        }
-
 
         // 添加新的数据点到队列
+        int dataCount = countMaxSeries(seriesMap);
         XYChart.Data<Number, Number> newDataPoint = new XYChart.Data<>(dataCount, value);
         dataDeque.addLast(newDataPoint);
 
-        // 更新X轴的值
-//        int index = 1;
-//        for (XYChart.Data<Number, Number> data : dataDeque) {
-//            data.setXValue(index++);
-//        }
-
-        // 清除旧数据点并添加新的数据点
-        series.getData().clear();
-
-        log.info("折线：{}", series);
-        for (Data<Number, Number> numberNumberData : dataDeque) {
-            log.info("数据点：{}", numberNumberData);
-            series.getData().add(new XYChart.Data<>(numberNumberData.getXValue(), numberNumberData.getYValue()));
-        }
-//        series.getData().addAll(dataDeque);
+        series.getData().add(newDataPoint);
     }
 
     public void collect(SensorData sensorData) {

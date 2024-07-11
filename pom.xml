@@ -16,6 +16,27 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>8u202</version>
+      <scope>system</scope>
+      <systemPath>${java.home}/lib/ext/jfxrt.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-fxml</artifactId>
+      <version>8u202</version>
+      <scope>system</scope>
+      <systemPath>${java.home}/lib/ext/jfxrt.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <version>8u202</version>
+      <scope>system</scope>
+      <systemPath>${java.home}/lib/ext/jfxrt.jar</systemPath>
+    </dependency>
+    <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
       <version>4.1.39.Final</version>

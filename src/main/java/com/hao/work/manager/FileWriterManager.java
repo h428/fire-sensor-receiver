@@ -9,6 +9,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class FileWriterManager {
+
     private static final String FILE_NAME;
     private static final Lock FILE_LOCK = new ReentrantLock();
     private static BufferedWriter writer;
@@ -27,12 +28,14 @@ public class FileWriterManager {
         }
     }
 
-    public static void writeData(String data) throws IOException {
+    public static void writeData(String data) {
         FILE_LOCK.lock();
         try {
             writer.write(data);
             writer.newLine();
             writer.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } finally {
             FILE_LOCK.unlock();
         }
