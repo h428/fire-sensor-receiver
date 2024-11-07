@@ -8,4 +8,4 @@
 **/.mvn/**
 **/mvnw
 **/mvnw.cmd
-*.csv
+/*.csv
